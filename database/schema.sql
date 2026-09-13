@@ -18,11 +18,10 @@
 -- ============================================================
 
 CREATE TABLE users (
-    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id             BIGSERIAL PRIMARY KEY,
     username       VARCHAR NOT NULL UNIQUE,
     email          VARCHAR NOT NULL UNIQUE,
     password_hash  VARCHAR NOT NULL,
-    role           VARCHAR NOT NULL DEFAULT 'BUYER',  -- BUYER, HOST
     created_at     TIMESTAMP NOT NULL DEFAULT now()
 );
 

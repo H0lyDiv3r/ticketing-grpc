@@ -1,0 +1,65 @@
+syntax = "proto3";
+package user;
+option go_package = "github.com/H0lyDiv3r/ticketing-grpc/gen/user";
+
+import "buf/validate/validate.proto";
+
+service UserService {
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+    rpc GetUserBatch(GetUserBatchRequest) returns (GetUserBatchResponse);
+}
+
+message RegisterRequest {
+    string username = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 20];
+    string email = 2 [(buf.validate.field).string.email = true];
+    string password = 3 [(buf.validate.field).string.min_len = 6];
+}
+
+message RegisterResponse {
+    User user = 1;
+    string token = 2;
+}
+
+message LoginRequest {
+    string email = 1 [(buf.validate.field).string.email = true];
+    string password = 2 [(buf.validate.field).string.min_len = 6];
+}
+
+message LoginResponse {
+    User user = 1;
+    string token = 2;
+}
+
+message GetUserRequest {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message ValidateTokenRequest {
+    string token = 1 [(buf.validate.field).string.min_len = 3];
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+}
+
+message GetUserBatchRequest {
+    repeated int64 ids = 1 [(buf.validate.field).repeated.items.int64.gt = 0];
+}
+
+message GetUserBatchResponse {
+    repeated User users = 1;
+}
+
+message User {
+    int64 id = 1;
+    string username = 2;
+    string email = 3;
+    string created_at = 4;
+}

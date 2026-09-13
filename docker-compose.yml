@@ -1,0 +1,146 @@
+services:
+  # ==========================================
+  # USER SERVICE & POSTGRESQL DATABASE
+  # ==========================================
+  user-db:
+    image: postgres:16-alpine
+    container_name: user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user_app
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: user_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_app -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user/Dockerfile
+    container_name: user-service
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    environment:
+      - DB_HOST=user-db
+      - DB_PORT=5432
+      - DB_USER=user_app
+      - DB_PASSWORD=secretpassword
+      - DB_NAME=user_db
+      - DB_SSLMODE=disable
+      - PORT=50051
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  # ==========================================
+  # TICKETING SERVICE & POSTGRESQL DATABASE
+  # ==========================================
+  ticketing-db:
+    image: postgres:16-alpine
+    container_name: ticketing-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ticketing_app
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: ticketing_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ticketing_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketing_app -d ticketing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ticketing-service:
+    build:
+      context: .
+      dockerfile: ticketing/Dockerfile
+    container_name: ticketing-service
+    restart: unless-stopped
+    ports:
+      - "50052:50052"
+    environment:
+      - DB_HOST=ticketing-db
+      - DB_PORT=5432
+      - DB_USER=ticketing_app
+      - DB_PASSWORD=secretpassword
+      - DB_NAME=ticketing_db
+      - DB_SSLMODE=disable
+      - PORT=50052
+      - USER_SERVICE_URL=user-service:50051
+    depends_on:
+      ticketing-db:
+        condition: service_healthy
+
+  # ==========================================
+  # PAYMENT SERVICE & POSTGRESQL DATABASE
+  # ==========================================
+  payment-db:
+    image: postgres:16-alpine
+    container_name: payment-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: payment_app
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: payment_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment_app -d payment_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment/Dockerfile
+    container_name: payment-service
+    restart: unless-stopped
+    ports:
+      - "50053:50053"
+    environment:
+      - DB_HOST=payment-db
+      - DB_PORT=5432
+      - DB_USER=payment_app
+      - DB_PASSWORD=secretpassword
+      - DB_NAME=payment_db
+      - DB_SSLMODE=disable
+      - PORT=50053
+    depends_on:
+      payment-db:
+        condition: service_healthy
+
+  # ==========================================
+  # PLATFORM (HTTP API GATEWAY)
+  # ==========================================
+  platform-service:
+    build:
+      context: .
+      dockerfile: platform/Dockerfile
+    container_name: platform-service
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - USER_SERVICE_URL=user-service:50051
+    depends_on:
+      - user-service
+
+volumes:
+  user_db_data:
+  ticketing_db_data:
+  payment_db_data:
