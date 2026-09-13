@@ -3,15 +3,11 @@ FROM golang:alpine AS builder
 
 WORKDIR /app
 
-# Download dependencies
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source code
+# Copy source code including local vendor directory
 COPY . .
 
-# Build service binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/ticketing-service ./ticketing/cmd
+# Build service binary offline using vendored dependencies
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -ldflags="-w -s" -o /bin/ticketing-service ./ticketing/cmd
 
 # Run stage
 FROM alpine:latest

@@ -6,8 +6,11 @@ import (
 	"net"
 	"os"
 
+	"buf.build/go/protovalidate"
 	upb "github.com/H0lyDiv3r/ticketing-grpc/gen/user"
+	"github.com/H0lyDiv3r/ticketing-grpc/user/domain"
 	"github.com/H0lyDiv3r/ticketing-grpc/user/handler"
+	"github.com/H0lyDiv3r/ticketing-grpc/user/interceptors"
 	"github.com/H0lyDiv3r/ticketing-grpc/user/repository"
 	"github.com/H0lyDiv3r/ticketing-grpc/user/service"
 	"google.golang.org/grpc"
@@ -54,10 +57,18 @@ func init() {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 
+	db.AutoMigrate(&domain.User{})
+
 	log.Println("Database connection established successfully")
 }
 
 func main() {
+
+	validator, err := protovalidate.New()
+	if err != nil {
+		log.Fatalf("failed to create validator: %v", err)
+	}
+
 	repo := repository.NewRepository(db)
 	svc := service.NewService(*repo)
 	handler := handler.NewHandler(svc)
@@ -67,7 +78,7 @@ func main() {
 		fmt.Printf("failed to listen on :50051: %v\n", err)
 		return
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(interceptors.ValidationInterceptors(validator), interceptors.LoggerInterceptor))
 	upb.RegisterUserServiceServer(grpcServer, handler)
 
 	fmt.Println("User gRPC server is listening on :50051...")

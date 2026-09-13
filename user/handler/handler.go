@@ -16,7 +16,7 @@ func NewHandler(service *service.Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) Signup(ctx context.Context, req *upb.RegisterRequest) (*upb.RegisterResponse, error) {
+func (h *Handler) Register(ctx context.Context, req *upb.RegisterRequest) (*upb.RegisterResponse, error) {
 	res, err := h.service.Signup(ctx, req)
 	if err != nil {
 		return nil, err
@@ -26,6 +26,11 @@ func (h *Handler) Signup(ctx context.Context, req *upb.RegisterRequest) (*upb.Re
 
 // func (h *Handler) Login(ctx context.Context, req *upb.LoginRequest) (*upb.LoginResponse, error) {
 
+// 	res, err := h.service.Login(ctx, req)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return res, nil
 // }
 
 // func (h *Handler) GetUser(ctx context.Context, req *upb.GetUserRequest) (*upb.GetUserResponse, error) {

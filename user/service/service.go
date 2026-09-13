@@ -47,3 +47,7 @@ func (s *Service) Signup(ctx context.Context, req *upb.RegisterRequest) (*upb.Re
 		},
 	}, nil
 }
+
+// func (s *Service) Login(ctx context.Context, req *upb.LoginRequest) (*upb.LoginResponse, error) {
+
+// }
